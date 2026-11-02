@@ -43,6 +43,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
   const [providerNotEnabled, setProviderNotEnabled] = useState(false);
   const [showGoogleHelp, setShowGoogleHelp] = useState(false);
   const [copiedCallback, setCopiedCallback] = useState(false);
+  const [showUrlConfigHelp, setShowUrlConfigHelp] = useState(false);
+  const [copiedNetlifyWildcard, setCopiedNetlifyWildcard] = useState(false);
 
   // Magic link & OTP states
   const [magicLinkSent, setMagicLinkSent] = useState(false);
@@ -410,10 +412,64 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuc
                 </div>
               )}
 
-              {!providerNotEnabled && (
-                <p className="text-[11px] text-stone-500 text-center">
+              <div className="pt-1 text-[11px] text-stone-500 space-y-1">
+                <p className="text-center">
                   Signs in through your Google Account via Supabase OAuth.
                 </p>
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowUrlConfigHelp(!showUrlConfigHelp)}
+                    className="text-[#B88B2A] hover:underline cursor-pointer font-medium text-[10.5px]"
+                  >
+                    {showUrlConfigHelp ? '▲ Hide URL Config' : '⚠️ Redirecting to localhost instead of Netlify?'}
+                  </button>
+                </div>
+              </div>
+
+              {showUrlConfigHelp && (
+                <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 text-xs text-amber-900 space-y-2 animate-fadeIn">
+                  <span className="font-bold block text-[11.5px] text-amber-950">
+                    Fix: Allow Netlify in Supabase URL Configuration
+                  </span>
+                  <p className="text-[11px] leading-relaxed text-amber-800">
+                    If Google redirects you to <code>http://localhost:3000</code> with <em>"Safari can't connect to server"</em>, Supabase blocked the Netlify redirect because Netlify is not yet in your Supabase allow-list:
+                  </p>
+                  <ol className="list-decimal list-inside space-y-1.5 text-[11px] text-amber-900">
+                    <li>
+                      Open{' '}
+                      <a
+                        href={`https://supabase.com/dashboard/project/${projectRef}/auth/url-configuration`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[#B88B2A] underline font-bold inline-flex items-center gap-0.5"
+                      >
+                        Supabase URL Configuration <ExternalLink className="w-2.5 h-2.5" />
+                      </a>
+                    </li>
+                    <li>
+                      Change <strong>Site URL</strong> to your Netlify address (or <code>{typeof window !== 'undefined' ? window.location.origin : 'https://your-site.netlify.app'}</code>).
+                    </li>
+                    <li>
+                      Under <strong>Redirect URLs</strong>, click <strong>Add URL</strong> and add this pattern:
+                      <div className="flex items-center gap-1.5 mt-1 font-mono text-[10px] bg-white p-1.5 rounded border border-amber-300 text-stone-800">
+                        <span>https://*.netlify.app/**</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText('https://*.netlify.app/**');
+                            setCopiedNetlifyWildcard(true);
+                            setTimeout(() => setCopiedNetlifyWildcard(false), 2000);
+                          }}
+                          className="ml-auto px-2 py-0.5 bg-amber-100 hover:bg-amber-200 rounded text-amber-900 font-sans text-[10px] shrink-0 cursor-pointer"
+                        >
+                          {copiedNetlifyWildcard ? 'Copied!' : 'Copy'}
+                        </button>
+                      </div>
+                    </li>
+                    <li>Click <strong>Save</strong>. Future Google logins will return cleanly to Netlify!</li>
+                  </ol>
+                </div>
               )}
             </div>
           )}

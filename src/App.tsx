@@ -83,6 +83,18 @@ export const App: React.FC = () => {
     getCurrentUser().then(setCurrentUser).catch(console.warn);
     const unsubscribe = onAuthStateChange((user) => {
       setCurrentUser(user);
+      if (user && typeof window !== 'undefined') {
+        // Clean up hash if it contained access_token or refresh_token from OAuth
+        if (window.location.hash && (window.location.hash.includes('access_token') || window.location.hash.includes('refresh_token'))) {
+          window.history.replaceState({}, document.title, window.location.pathname + '#dashboard');
+          setActiveTab('dashboard');
+        }
+        // Clean up search query if it contained ?code= from PKCE flow
+        if (window.location.search && window.location.search.includes('code=')) {
+          window.history.replaceState({}, document.title, window.location.pathname + '#dashboard');
+          setActiveTab('dashboard');
+        }
+      }
     });
     return () => {
       unsubscribe();

@@ -117,8 +117,18 @@ export function isSupabaseConfigured(): boolean {
 // -------------------------------------------------------------
 
 /**
+ * Resolves the dynamic redirect URL based on current browser origin.
+ * Automatically handles Netlify domains, custom domains, or local testing.
+ */
+export function getAuthRedirectUrl(): string {
+  if (typeof window === 'undefined') return 'http://localhost:3000';
+  // Standardize origin without trailing slash (e.g. https://your-site.netlify.app)
+  return window.location.origin.replace(/\/$/, '');
+}
+
+/**
  * Super User sign in with Google OAuth.
- * Uses window.location.origin as redirect URL so users return directly to the PWA.
+ * Uses current browser origin (Netlify or localhost) as redirect URL.
  * Probes the endpoint first to prevent raw JSON errors if Google provider is not yet enabled.
  */
 export async function signInWithGoogle(): Promise<{
@@ -133,10 +143,11 @@ export async function signInWithGoogle(): Promise<{
   }
 
   try {
+    const redirectUrl = getAuthRedirectUrl();
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin,
+        redirectTo: redirectUrl,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
@@ -203,10 +214,11 @@ export async function sendMagicLink(
   }
 
   try {
+    const redirectUrl = getAuthRedirectUrl();
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: redirectUrl,
       },
     });
     return { error };
